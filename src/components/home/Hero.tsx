@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { site } from "@/lib/site";
 import BackgroundGrid from "../shared/BackgroundGrid";
+import Link from "next/link";
 
 const stack = [
   "HTML",
@@ -75,9 +76,9 @@ export default function Hero() {
                 GitHub
               </a>
 
-              <a href="/projects" className="btn-secondary">
+              <Link href="/projects" className="btn-secondary">
                 View Projects
-              </a>
+              </Link>
 
               <a
                 href="/Resume.pdf"
