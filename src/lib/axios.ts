@@ -1,21 +1,24 @@
 import axios from "axios";
 
-// Helper to guarantee valid absolute URLs on Node.js server during SSR
 const getBaseUrl = () => {
-  // Browser context (Client-side): relative paths work directly
   if (typeof window !== "undefined") {
-    return process.env.NEXT_PUBLIC_API_URL || "";
+    // Prefer same-origin relative path unless an explicit non-localhost API URL is configured
+    const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+    if (envUrl && !envUrl.includes("localhost")) {
+      return envUrl.replace(/\/+$/, "");
+    }
+    return "";
   }
 
-  // Server context (SSR / Next.js Server Components): absolute URL required
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
+  const serverEnvUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (serverEnvUrl && !serverEnvUrl.includes("localhost")) {
+    return serverEnvUrl.replace(/\/+$/, "");
   }
+
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
 
-  // Local development server fallback
   return "http://localhost:3000";
 };
 
@@ -31,7 +34,9 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     const customMessage =
-      error.response?.data?.error || error.message || "An unexpected error occurred.";
+      error.response?.data?.error ||
+      error.message ||
+      "An unexpected error occurred.";
     return Promise.reject(new Error(customMessage));
   }
 );
