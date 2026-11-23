@@ -1,7 +1,9 @@
+
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: ["firebase-admin"],
+
   images: {
     remotePatterns: [
       {
@@ -10,12 +12,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
   experimental: {
     agentFeedback: true,
   },
+
   cacheComponents: true,
   partialPrefetching: true,
   reactCompiler: true,
+
   turbopack: {
     rules: {
       "*.css": {
