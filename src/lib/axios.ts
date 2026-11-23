@@ -1,25 +1,81 @@
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 
-const getBaseUrl = () => {
+const normalizeBaseUrl = (raw?: string): string => {
+  const trimmed = raw?.trim();
+  if (!trimmed) return "";
+  return trimmed.replace(/\/+$/, "");
+};
+
+const getBaseUrl = (): string => {
+  const configuredUrl = normalizeBaseUrl(process.env.NEXT_PUBLIC_API_URL);
+
+  // In the browser, default to same-origin ("") unless a non-localhost API URL is explicitly set
   if (typeof window !== "undefined") {
-    // Prefer same-origin relative path unless an explicit non-localhost API URL is configured
-    const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-    if (envUrl && !envUrl.includes("localhost")) {
-      return envUrl.replace(/\/+$/, "");
+    if (configuredUrl && !configuredUrl.includes("localhost")) {
+      return configuredUrl;
     }
     return "";
   }
 
-  const serverEnvUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-  if (serverEnvUrl && !serverEnvUrl.includes("localhost")) {
-    return serverEnvUrl.replace(/\/+$/, "");
+  // On the server, use an explicit non-localhost API URL if provided
+  if (configuredUrl && !configuredUrl.includes("localhost")) {
+    return configuredUrl;
   }
 
   if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
+    return `https://${process.env.VERCEL_URL.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
   }
 
   return "http://localhost:3000";
+};
+
+const extractErrorMessage = (error: unknown): string => {
+  if (isAxiosError(error)) {
+    const data = error.response?.data;
+
+    if (typeof data === "string" && data.trim()) {
+      return data.trim();
+    }
+
+    if (data && typeof data === "object") {
+      const record = data as Record<string, unknown>;
+      const candidate = record.error ?? record.message;
+
+      if (typeof candidate === "string" && candidate.trim()) {
+        return candidate.trim();
+      }
+
+      if (candidate && typeof candidate === "object") {
+        const nested = candidate as Record<string, unknown>;
+        if (typeof nested.message === "string" && nested.message.trim()) {
+          return nested.message.trim();
+        }
+        try {
+          return JSON.stringify(candidate);
+        } catch {
+          return "Request failed with structured error.";
+        }
+      }
+    }
+
+    if (typeof error.message === "string" && error.message.trim()) {
+      return error.message.trim();
+    }
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  if (error && typeof error === "object") {
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return "An unexpected error occurred.";
+    }
+  }
+
+  return "An unexpected error occurred.";
 };
 
 export const apiClient = axios.create({
@@ -30,13 +86,21 @@ export const apiClient = axios.create({
   },
 });
 
+apiClient.interceptors.request.use((config) => {
+  config.baseURL = getBaseUrl();
+  return config;
+});
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    const customMessage =
-      error.response?.data?.error ||
-      error.message ||
-      "An unexpected error occurred.";
-    return Promise.reject(new Error(customMessage));
+    const message = extractErrorMessage(error);
+    const wrappedError = new Error(message) as Error & { status?: number };
+
+    if (isAxiosError(error) && error.response?.status) {
+      wrappedError.status = error.response.status;
+    }
+
+    return Promise.reject(wrappedError);
   }
 );
