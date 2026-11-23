@@ -7,7 +7,7 @@ const normalizeBaseUrl = (raw?: string): string => {
 };
 
 const getBaseUrl = (): string => {
-  const configuredUrl = normalizeBaseUrl(process.env.NEXT_PUBLIC_API_URL);
+  const configuredUrl = normalizeBaseUrl(process.env.API_BASE_URL);
 
   // In the browser, default to same-origin ("") unless a non-localhost API URL is explicitly set
   if (typeof window !== "undefined") {
