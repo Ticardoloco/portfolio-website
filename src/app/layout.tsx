@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
 import HeaderLayout from "@/components/site/HeaderLayout";
 
+const SITE_URL = "https://taiwoegbelekeportfoliowebsite.vercel.app";
+
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -16,9 +18,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Egbeleke Taiwo — Full-Stack Software Engineer",
   description:
     "Full-stack software engineer specializing in backend architecture, scalable APIs, and modern web applications.",
+  verification: {
+    google: "zYVYlXi26hLoFRbLgcfO4w8vwSgDoLdIECzetbH6gVg",
+  },
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
@@ -42,7 +48,7 @@ export default function RootLayout({
     "@type": "Person",
     name: "Egbeleke Taiwo",
     jobTitle: "Full-Stack Software Engineer",
-    url: "https://your-portfolio.vercel.app",
+    url: SITE_URL,
     description:
       "Full-stack software engineer specializing in backend architecture, custom API development, and serverless web applications.",
     address: {
@@ -80,7 +86,6 @@ export default function RootLayout({
         />
       </head>
       <body className="flex min-h-full flex-col overflow-x-hidden bg-ink font-sans text-paper antialiased selection:bg-signal selection:text-ink">
-        {/* Wrap Navbar in Suspense to safely stream usePathname() hooks in Next.js 16 */}
         <Suspense fallback={<div className="h-16 w-full" />}>
           <HeaderLayout>
             <main className="flex-1">{children}</main>
