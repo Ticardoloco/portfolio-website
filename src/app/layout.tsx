@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Geist, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
@@ -16,6 +16,12 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "500", "700"],
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -88,10 +94,11 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col overflow-x-hidden bg-ink font-sans text-paper antialiased selection:bg-signal selection:text-ink">
         <Suspense fallback={<div className="h-16 w-full" />}>
           <HeaderLayout>
-            <main className="flex-1">{children}</main>
-          </HeaderLayout>
-        </Suspense>
+        
 
+        <main className="flex-1">{children}</main>
+        </HeaderLayout>
+        </Suspense>
         <Toaster
           theme="dark"
           position="bottom-right"
